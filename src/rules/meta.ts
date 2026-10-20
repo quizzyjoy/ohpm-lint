@@ -27,6 +27,20 @@ export function metaRules(ctx: LintContext): Issue[] {
   const author = manifest['author'];
   if (author === undefined) {
     issues.push(issue(ctx, 'OHPM-META-02', 'error', 'author 缺失', 'oh-package.json5 必须包含 author 对象', '补 {"name": "...", "email": "..."}（email 与 url 至少一个）。', '§5.4', manifestPath));
+  } else if (typeof author === 'string') {
+    // 官方文档要求对象，但实测中心仓存量包普遍写字符串（14 个热门包中 8 个），平台并未拦截
+    issues.push(
+      issue(
+        ctx,
+        'OHPM-META-02',
+        'warn',
+        'author 写成了字符串',
+        `当前 "${author}"；官方文档要求 author 为对象`,
+        '建议改为 {"name": "…", "email": "…"}，便于中心仓展示与联系（平台目前接受字符串）。',
+        '§5.4',
+        manifestPath
+      )
+    );
   } else if (typeof author !== 'object' || author === null || Array.isArray(author)) {
     issues.push(issue(ctx, 'OHPM-META-02', 'error', 'author 类型错误', 'author 必须是 JSON 对象，不能是字符串', '改为 {"name":"...","email":"..."} 形式。', '§5.4', manifestPath));
   } else {
@@ -206,10 +220,12 @@ export function metaRules(ctx: LintContext): Issue[] {
   }
 
   // ---- META-11 兼容 SDK 字段 ----
-  // hvigor 打包时会自动写入；dir 模式下缺失属正常，降为 info 避免开发期噪音。
+  // hvigor 打包时会自动写入；实测既有字符串（"12"）也有数字（12）两种形态，均视为已填写。
+  // dir 模式下缺失属正常，降为 info 避免开发期噪音。
   const sdkFieldSeverity: Issue['severity'] = ctx.kind === 'har' ? 'warn' : 'info';
   for (const field of ['compatibleSdkVersion', 'compatibleSdkType']) {
-    const value = asString(manifest[field]);
+    const raw = manifest[field];
+    const value = typeof raw === 'string' ? raw : typeof raw === 'number' ? String(raw) : undefined;
     if (value === undefined || value.trim() === '') {
       issues.push(issue(ctx, 'OHPM-META-11', sdkFieldSeverity, `${field} 未填写`, '建议声明最低兼容的 SDK 版本/类型（hvigor 通常会自动写入）', '补 compatibleSdkVersion 与 compatibleSdkType。', '§5.3', manifestPath));
     } else if (charLength(value) > 64) {
@@ -217,9 +233,16 @@ export function metaRules(ctx: LintContext): Issue[] {
     }
   }
 
-  // ---- META-12 nativeComponents 与 libs/*.so 一致性（仅 har）----
+  // ---- META-12 nativeComponents 与 libs/**.so 一致性（仅 har）----
+  // .so 通常按 ABI 分子目录存放（libs/arm64-v8a/libx.so），而声明里只写文件名，因此按 basename 比对。
   if (ctx.kind === 'har') {
-    const soFiles = ctx.files.filter((file) => /^libs\/.*\.so$/i.test(file.path)).map((file) => file.path.slice('libs/'.length));
+    const soBasenames = new Map<string, string>();
+    for (const file of ctx.files) {
+      if (!/^libs\/.*\.so$/i.test(file.path)) continue;
+      const base = (file.path.split('/').pop() ?? file.path).toLowerCase();
+      soBasenames.set(base, file.path);
+    }
+
     const declared = manifest['nativeComponents'];
 
     if (declared !== undefined && !Array.isArray(declared)) {
@@ -235,13 +258,14 @@ export function metaRules(ctx: LintContext): Issue[] {
           issues.push(issue(ctx, 'OHPM-META-12', 'warn', 'nativeComponents 条目缺少 name', '声明项没有 name 字段', '填写 .so 文件名。', '§5.6', manifestPath));
           continue;
         }
-        declaredNames.add(name);
-        if (!soFiles.includes(name)) {
-          issues.push(issue(ctx, 'OHPM-META-12', 'warn', 'nativeComponents 声明的 .so 不存在', `声明的 "${name}" 不在 package/libs/ 下`, '修正文件名或删除该声明。', '§5.6', manifestPath));
+        const base = (name.split('/').pop() ?? name).toLowerCase();
+        declaredNames.add(base);
+        if (!soBasenames.has(base)) {
+          issues.push(issue(ctx, 'OHPM-META-12', 'warn', 'nativeComponents 声明的 .so 不存在', `声明的 "${name}" 在 package/libs/ 下找不到同名文件`, '修正文件名或删除该声明。', '§5.6', manifestPath));
         }
       }
 
-      const undeclared = soFiles.filter((name) => !declaredNames.has(name));
+      const undeclared = [...soBasenames.keys()].filter((base) => !declaredNames.has(base));
       if (undeclared.length > 0) {
         issues.push(
           issue(ctx, 'OHPM-META-12', 'warn', '存在未声明的 .so', `package/libs/ 下的 ${undeclared.slice(0, 5).join(', ')} 未在 nativeComponents 中声明`, '补 nativeComponents 声明。', '§5.6', manifestPath)

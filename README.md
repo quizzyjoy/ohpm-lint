@@ -80,7 +80,7 @@ npx ohpm-lint ./path/to/library
 | `OHPM-STRUCT-01` | error | HAR 必须包含 `package/` 目录（`oh-package.json5` 在其下） |
 | `OHPM-STRUCT-02` | error | `oh-package.json5` 必须能被 JSON5 解析 |
 | `OHPM-META-01` | error | `description` 6–512 字符 |
-| `OHPM-META-02` | error | `author` 必须是对象，`email`/`url` 至少一个 |
+| `OHPM-META-02` | error / warn | `author` 必须是对象，`email`/`url` 至少一个（字符串形态仅 warn：平台存量包普遍如此） |
 | `OHPM-META-03` | error | 开源包 `license` 必填，1–256 字符 |
 | `OHPM-META-04` | error | 开源包 `repository` 必填，协议限 https/http/ftp/rtsp/mms |
 | `OHPM-META-05` | info/warn | `homepage` / `bugs` 建议项 |
@@ -120,6 +120,15 @@ npm test          # 构建 + fixtures 测试
 npm run build     # 只构建
 node dist/cli.js fixtures/pass-minimal/package --strict
 ```
+
+## 批量扫描已上架的包
+
+```bash
+npm run build
+node scripts/scan-ohpm.mjs --out scan.json @ohos/lottie @ohos/axios @ohos/mpchart
+```
+
+脚本会从 OHPM registry 下载每个包的 latest `.har`，逐包跑 lint 并汇总（用于生态体检或回归对比）。
 
 ## 规则从哪来
 

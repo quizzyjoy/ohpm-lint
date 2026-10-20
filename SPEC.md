@@ -117,7 +117,7 @@ ohpm-lint <path>                    # 目录或 .har
 | ID | 级别 | 适用 | 检查 | 官方依据 |
 |---|---|---|---|---|
 | `OHPM-META-01` | error | both | `description` 为字符串，长度 6–512 | §5.1 |
-| `OHPM-META-02` | error | both | `author` 必须是**对象**；`name` 1–128；`email`（≤64，含 `@`）与 `url`（≤1024）**至少一个** | §5.4 |
+| `OHPM-META-02` | error（字符串形态为 warn） | both | `author` 必须是**对象**；`name` 1–128；`email`（≤64，含 `@`）与 `url`（≤1024）**至少一个**。实测中心仓存量包普遍写字符串且未被拦截（13 个样本中 8 个），故字符串仅告警 | §5.4 |
 | `OHPM-META-03` | error | both | 开源包 `license` 必填且 1–256 字符（闭源可缺） | §5.1 |
 | `OHPM-META-04` | error | both | 开源包 `repository` 必填；URL ≤1024；协议 ∈ {https,http,ftp,rtsp,mms} | §5.5 |
 | `OHPM-META-05` | warn | both | `homepage` / `bugs` 建议填写且为合法 URL | 建议项 |
@@ -126,8 +126,8 @@ ohpm-lint <path>                    # 目录或 .har
 | `OHPM-META-08` | error | both | `dependencies` / `devDependencies` / `dynamicDependencies` 不得依赖自身；键 ≤214、值 ≤128 | §5.2 |
 | `OHPM-META-09` | error | both | `oh-exports` 为相对路径数组、不含 `..`；后缀 `.ts`/`.ets`/`.js`；路径必须存在（`.ts`/`.ets` 可回退 `.d.ts`/`.d.ets`） | §5.2 / §7.1 |
 | `OHPM-META-10` | error | both | `sourceType` ∈ {open, closed}（缺省 open）；**闭源包** `metadata.debug === true` 违规（字符串 `"true"` 不算） | §5.7 |
-| `OHPM-META-11` | warn（dir 模式降为 info） | both | `compatibleSdkVersion` / `compatibleSdkType` 建议填写（`prepublish` 也会警告；hvigor 打包时通常自动写入） | §5.3 |
-| `OHPM-META-12` | warn | har | `nativeComponents` 与 `package/libs/*.so` 一致：有 `.so` 未声明 / `name` 为空 / `name` 指向不存在的 `.so` | §5.6 |
+| `OHPM-META-11` | warn（dir 模式降为 info） | both | `compatibleSdkVersion` / `compatibleSdkType` 建议填写；实测既有字符串也有数字形态（hvigor 不同版本），两者都视为已填写 | §5.3 |
+| `OHPM-META-12` | warn | har | `nativeComponents` 与 `package/libs/**/*.so` 一致性：按 **basename** 比对（容忍 ABI 子目录）；有 `.so` 未声明 / `name` 为空 / `name` 指向不存在的文件 | §5.6 |
 | `OHPM-META-13` | warn | both | `license` 使用 SPDX 标识（`Apache-2.0` 而非 `Apache License 2.0`） | 质量建议 |
 
 ### 3.4 文件 `FILE`

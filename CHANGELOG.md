@@ -3,6 +3,18 @@
 All notable changes to this project are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- `OHPM-META-02`：`author` 写成字符串时从 error 降为 warn（实测 13 个热门包中 8 个如此，平台未拦截；缺失/空仍为 error）。
+- `OHPM-META-11`：`compatibleSdkVersion` / `compatibleSdkType` 接受数字形态（hvigor 不同版本写法不同），不再误报"未填写"。
+- `OHPM-META-12`：`.so` 改为按 **basename** 比对，容忍 `libs/arm64-v8a/` 这类 ABI 子目录。
+
+### Added
+
+- `scripts/scan-ohpm.mjs`：批量扫描已上架 OHPM 包（下载 latest `.har` → lint → 汇总 JSON）。
+
 ## [0.1.0] - 2026-10-21
 
 首个可用版本（P0），规则全部锚定官方条目，不做"社区口味"。
