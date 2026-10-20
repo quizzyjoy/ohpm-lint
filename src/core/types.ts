@@ -21,8 +21,15 @@ export interface FileInfo {
 
 export type TargetKind = 'har' | 'dir';
 
+/**
+ * ohpm: 含 oh-package.json5 的规范 HAR
+ * npm : 无 oh-package.json5、但有 package.json 的 npm 风格包（中心仓允许直发）
+ */
+export type Distribution = 'ohpm' | 'npm';
+
 export interface LintContext {
   kind: TargetKind;
+  distribution: Distribution;
   targetPath: string;
   /** har: unpacked har root; dir: module root */
   root: string;

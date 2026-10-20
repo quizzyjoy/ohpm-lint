@@ -121,7 +121,7 @@ ohpm-lint <path>                    # 目录或 .har
 | `OHPM-META-03` | error | both | 开源包 `license` 必填且 1–256 字符（闭源可缺） | §5.1 |
 | `OHPM-META-04` | error | both | 开源包 `repository` 必填；URL ≤1024；协议 ∈ {https,http,ftp,rtsp,mms} | §5.5 |
 | `OHPM-META-05` | warn | both | `homepage` / `bugs` 建议填写且为合法 URL | 建议项 |
-| `OHPM-META-06` | error | both | `main` 必填，且指向的文件**在包内真实存在** | §5.1 |
+| `OHPM-META-06` | error（字节码 HAR 为 info） | both | `main` 必填，且指向的文件**在包内真实存在**；`artifactType ∈ {obfuscation, bytecode}` 且已写 `types` 时，hvigor 不写 `main`，降为 info | §5.1 |
 | `OHPM-META-07` | error | both | `artifactType` ∈ {original, obfuscation, bytecode}；后两者要求 `types` 存在且以 `.d.ts`/`.d.ets` 结尾；`obfuscated` 必须是布尔（字符串 `"true"` **不算**已混淆）；`addonSdk` 必须是布尔 | §5.3 |
 | `OHPM-META-08` | error | both | `dependencies` / `devDependencies` / `dynamicDependencies` 不得依赖自身；键 ≤214、值 ≤128 | §5.2 |
 | `OHPM-META-09` | error | both | `oh-exports` 为相对路径数组、不含 `..`；后缀 `.ts`/`.ets`/`.js`；路径必须存在（`.ts`/`.ets` 可回退 `.d.ts`/`.d.ets`） | §5.2 / §7.1 |
@@ -137,10 +137,10 @@ ohpm-lint <path>                    # 目录或 .har
 | `OHPM-FILE-01` | error | both | 四件套齐全：`oh-package.json5`、`README*.md`、`CHANGELOG*.md`、`LICENSE*`（开源包）；文件名大小写不敏感，变体见 §3.5 | §1 / §7.1 |
 | `OHPM-FILE-02` | error | both | 上述文件**非空**（去空白后长度 > 0） | §1 |
 | `OHPM-FILE-03` | error | both | `CHANGELOG` 正文包含当前 `version` 字符串（边界匹配） | §7.1 |
-| `OHPM-FILE-04` | error | both | `README` 含 `ohpm install <name>` 或 `ohpm i <name>`，且 `<name>` **等于** `oh-package.json5` 的 `name` | §7.1 |
+| `OHPM-FILE-04` | error | both | `README` 含 `ohpm install <name>` 或 `ohpm i <name>`，且 `<name>` **等于** `oh-package.json5` 的 `name`（比对前剥离 `@版本` 后缀） | §7.1 |
 | `OHPM-FILE-05` | error | har | 包内不得含 `.exe` | §7.1 |
-| `OHPM-FILE-06` | error | both | 敏感文件：`*.p7b` `*.cer` `*.p12` `*.pfx` `*.pem` `*.key` `*.jks` `.env*` `signingConfigs*`，以及文件内容命中私钥头（`BEGIN ... PRIVATE KEY`） | §8-5 |
-| `OHPM-FILE-07` | warn | har | 源码泄漏：包内出现 `src/**/*.ets` / `*.ts` 源文件（`prepublish` 同类警告）。dir 模式下 `src/` 属正常开发源码，不报 | 质量建议 |
+| `OHPM-FILE-06` | error（`src/` 下为 warn） | both | 敏感文件：`*.p7b` `*.cer` `*.p12` `*.pfx` `*.pem` `*.key` `*.jks` `.env*` `signingConfigs*`，以及文件内容命中私钥头（`BEGIN ... PRIVATE KEY`）。全部命中都在 `src/` 下时降为 warn（常见于第三方测试证书） | §8-5 |
+| `OHPM-FILE-07` | warn | har | 仅当包声明 `artifactType ∈ {obfuscation, bytecode}` 却仍带**非 `.d.ts`/`.d.ets`** 源码时告警；源码 HAR（无 artifactType）不报 | 质量建议 |
 
 ### 3.5 结构 `STRUCT`（仅 `har`）
 
@@ -148,7 +148,8 @@ ohpm-lint <path>                    # 目录或 .har
 |---|---|---|---|
 | `OHPM-STRUCT-01` | error | 存在 `package/` 目录，且 `package/oh-package.json5` 存在非空 | §7.1 |
 | `OHPM-STRUCT-02` | error | `oh-package.json5` 能被 JSON5 正确解析（任何输入模式都查） | §7.1 |
-| `OHPM-STRUCT-03` | error | 所有 `.so` 必须位于 `package/libs/` 下 | §7.1 |
+| `OHPM-STRUCT-03` | error | 运行库 `.so` 必须位于 `package/libs/` 下；`src/**` 下的 `.so`（源码 HAR 的 prebuilt/third-party）不报 | §7.1 |
+| `OHPM-PKG-01` | info | 包内无 `oh-package.json5` 但有 `package.json` → 判为 npm 风格包，跳过 OHPM HAR 规范检查（中心仓允许这类包直发） | 说明 |
 
 ### 3.6 体积 `SIZE`
 

@@ -110,8 +110,19 @@ export function metaRules(ctx: LintContext): Issue[] {
 
   // ---- META-06 main 存在性 ----
   const main = asString(manifest['main']);
+  const typeEntry = asString(manifest['types']);
+  const mainArtifact = asString(manifest['artifactType']);
+  const bytecode = mainArtifact === 'obfuscation' || mainArtifact === 'bytecode';
+
   if (main === undefined || main.trim() === '') {
-    issues.push(issue(ctx, 'OHPM-META-06', 'error', 'main 缺失', 'oh-package.json5 必须填写 main（入口文件）', '填写相对模块根的入口文件，例如 "Index.ets"。', '§5.1', manifestPath));
+    if (bytecode && typeEntry !== undefined && typeEntry.trim() !== '') {
+      // hvigor 打字节码 HAR 时不写 main，入口由 types 表达；平台实测接受，故只提示
+      issues.push(
+        issue(ctx, 'OHPM-META-06', 'info', '字节码 HAR 未声明 main', '官方文档要求 main 必填，但 hvigor 的字节码 HAR 只写 types（平台目前接受）', '如要严格对齐文档，可在 oh-package.json5 补 "main" 后重新打包。', '§5.1', manifestPath)
+      );
+    } else {
+      issues.push(issue(ctx, 'OHPM-META-06', 'error', 'main 缺失', 'oh-package.json5 必须填写 main（入口文件）', '填写相对模块根的入口文件，例如 "Index.ets"。', '§5.1', manifestPath));
+    }
   } else {
     const normalized = main.replace(/^\.\//, '');
     const abs = path.resolve(ctx.packageDir, normalized);

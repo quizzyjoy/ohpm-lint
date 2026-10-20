@@ -14,6 +14,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 ### Added
 
 - `scripts/scan-ohpm.mjs`：批量扫描已上架 OHPM 包（下载 latest `.har` → lint → 汇总 JSON）。
+- `OHPM-PKG-01`（info）：识别 npm 风格包（有 `package.json`、无 `oh-package.json5`），跳过 HAR 规范检查（60 个热门包中 12 个属于此类）。
+
+### Changed（基于 60 个热门包实测校准）
+
+- `OHPM-FILE-04`：比对安装命令前剥离 `@版本` 后缀（`ohpm install bugly@0.7.2` 合法）。
+- `OHPM-FILE-06`：敏感文件全部命中的都在 `src/` 下时降为 warn（第三方测试证书常见）。
+- `OHPM-FILE-07`：只对声明 `obfuscation/bytecode` 却仍带非 `.d.*` 源码的包告警；源码 HAR 不再误报。
+- `OHPM-STRUCT-03`：`src/` 下的 `.so`（源码 HAR 的 prebuilt/third-party）不再报错。
+- `OHPM-META-06`：字节码 HAR 只写 `types` 时降为 info。
 
 ## [0.1.0] - 2026-10-21
 

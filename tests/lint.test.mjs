@@ -224,6 +224,42 @@ test('file: private key content is detected (runtime-generated, never committed)
   assert.equal(issue.severity, 'error');
 });
 
+test('file: a source HAR may ship src/*.ets without a leak warning', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ohpm-lint-src-'));
+  fs.cpSync(path.join(fixturesDir, 'pass-minimal', 'package'), dir, { recursive: true });
+  fs.mkdirSync(path.join(dir, 'src', 'main', 'ets'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'src', 'main', 'ets', 'Foo.ets'), 'export const a = 1;\n');
+
+  const har = makeHar(dir);
+  const result = lint(har);
+  assert.ok(!result.issues.some((item) => item.rule === 'OHPM-FILE-07'), 'source HAR must not be flagged');
+});
+
+test('file: install command with an explicit version still matches the package name', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ohpm-lint-ver-'));
+  fs.cpSync(path.join(fixturesDir, 'pass-minimal', 'package'), dir, { recursive: true });
+  const readme = path.join(dir, 'README.md');
+  fs.writeFileSync(
+    readme,
+    fs.readFileSync(readme, 'utf8').replace('ohpm install @quizzyjoy/lintprobe', 'ohpm install @quizzyjoy/lintprobe@0.1.0')
+  );
+
+  const result = lint(makeHar(dir));
+  assert.ok(!result.issues.some((item) => item.rule === 'OHPM-FILE-04'), JSON.stringify(result.issues, null, 2));
+});
+
+test('npm-style package gets a single info instead of HAR-spec errors', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ohpm-lint-npm-'));
+  fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ name: 'pako', version: '2.1.0' }));
+  fs.writeFileSync(path.join(dir, 'README.md'), '# pako\n');
+
+  const result = lint(dir);
+  assert.equal(result.context.distribution, 'npm');
+  assert.equal(result.issues.length, 1);
+  assert.equal(result.issues[0].rule, 'OHPM-PKG-01');
+  assert.equal(result.issues[0].severity, 'info');
+});
+
 test('cli: .ohpmlintrc.json5 can turn a rule off', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ohpm-lint-config-'));
   fs.cpSync(path.join(fixturesDir, 'warn-doc', 'package'), dir, { recursive: true });

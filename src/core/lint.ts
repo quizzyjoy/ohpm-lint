@@ -1,8 +1,9 @@
+import fs from 'node:fs';
 import path from 'node:path';
 import { walkFiles } from '../core/files.js';
-import { loadManifest } from '../core/manifest.js';
+import { loadManifest, type ManifestLoad } from '../core/manifest.js';
 import { resolveTarget } from '../core/target.js';
-import type { Issue, LintContext } from '../core/types.js';
+import type { Distribution, Issue, LintContext } from '../core/types.js';
 import { docRules } from '../rules/doc.js';
 import { fileRules } from '../rules/file.js';
 import { metaRules } from '../rules/meta.js';
@@ -31,7 +32,6 @@ const NETWORK_SKIPPED: SkippedRule[] = [
   { rule: 'OHPM-VER-03', reason: 'requires-network: 版本是否已发布过只能在中心仓确认' }
 ];
 
-/** 目录模式下列出的构建/依赖目录不算包内容 */
 const EXCLUDED_DIRS = new Set([
   'node_modules',
   'oh_modules',
@@ -50,6 +50,7 @@ export function lint(input: string, options: LintOptions = {}): LintResult {
   try {
     const packageDir = target.kind === 'har' ? path.join(target.root, 'package') : target.root;
     const manifest = loadManifest(packageDir);
+    const distribution = detectDistribution(target.kind === 'har' ? target.root : packageDir, packageDir, manifest);
 
     const walked = walkFiles(packageDir);
     const files = target.kind === 'dir' ? walked.filter((file) => !isExcluded(file.path)) : walked;
@@ -58,6 +59,7 @@ export function lint(input: string, options: LintOptions = {}): LintResult {
 
     const context: LintContext = {
       kind: target.kind,
+      distribution,
       targetPath: target.inputPath,
       root: target.root,
       packageDir,
@@ -69,6 +71,14 @@ export function lint(input: string, options: LintOptions = {}): LintResult {
       sourceType,
       archiveBytes: target.archiveBytes
     };
+
+    if (distribution === 'npm') {
+      return {
+        context,
+        issues: [npmStyleIssue(context)],
+        skipped: [...NETWORK_SKIPPED, { rule: 'OHPM-*', reason: 'npm-style-package: 无 oh-package.json5，OHPM HAR 规范不适用' }]
+      };
+    }
 
     const issues = [
       ...structRules(context),
@@ -92,6 +102,34 @@ export function lint(input: string, options: LintOptions = {}): LintResult {
   } finally {
     target.cleanup();
   }
+}
+
+/** npm 风格包：没有 oh-package.json5，但存在 package.json（中心仓允许这类包直发）。 */
+function detectDistribution(root: string, packageDir: string, manifest: ManifestLoad): Distribution {
+  if (manifest.exists) return 'ohpm';
+  if (fs.existsSync(path.join(packageDir, 'package.json'))) return 'npm';
+
+  // 少数 npm 包的 tarball 根目录不是 package/，而是一个同名目录
+  try {
+    for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
+      if (entry.isDirectory() && fs.existsSync(path.join(root, entry.name, 'package.json'))) return 'npm';
+    }
+  } catch {
+    /* ignore */
+  }
+
+  return 'ohpm';
+}
+
+function npmStyleIssue(ctx: LintContext): Issue {
+  return {
+    rule: 'OHPM-PKG-01',
+    severity: 'info',
+    title: 'npm 风格包（未使用 oh-package.json5）',
+    message: '包内没有 oh-package.json5，但存在 package.json；OHPM 中心仓允许这类包直接发布，因此跳过 HAR 规范检查',
+    hint: '若要享受 OHPM 规范（四件套、README 安装命令、体积与 native 校验），请用 hvigor 打成 HAR 再发布。',
+    officialRef: '说明'
+  };
 }
 
 function isExcluded(relative: string): boolean {

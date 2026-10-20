@@ -76,7 +76,7 @@ npx ohpm-lint ./path/to/library
 | `OHPM-FILE-01` | error | 四件套齐全：`oh-package.json5`、`README`、`CHANGELOG`、`LICENSE`（闭源包免 LICENSE） |
 | `OHPM-FILE-02` | error | 四件套非空 |
 | `OHPM-FILE-03` | error | `CHANGELOG` 必须包含当前版本号 |
-| `OHPM-FILE-04` | error | `README` 必须含 `ohpm install <name>` 且与 `name` 一致 |
+| `OHPM-FILE-04` | error | `README` 必须含 `ohpm install <name>` 且与 `name` 一致（自动剥离 `@版本`） |
 | `OHPM-STRUCT-01` | error | HAR 必须包含 `package/` 目录（`oh-package.json5` 在其下） |
 | `OHPM-STRUCT-02` | error | `oh-package.json5` 必须能被 JSON5 解析 |
 | `OHPM-META-01` | error | `description` 6–512 字符 |
@@ -84,12 +84,13 @@ npx ohpm-lint ./path/to/library
 | `OHPM-META-03` | error | 开源包 `license` 必填，1–256 字符 |
 | `OHPM-META-04` | error | 开源包 `repository` 必填，协议限 https/http/ftp/rtsp/mms |
 | `OHPM-META-05` | info/warn | `homepage` / `bugs` 建议项 |
-| `OHPM-META-06` | error | `main` 必须指向包内真实存在的文件 |
+| `OHPM-META-06` | error / info | `main` 必须指向包内真实存在的文件；字节码 HAR 只写 `types` 时降为 info |
 
 | `OHPM-FILE-05` | error | 包内禁止 `.exe` |
-| `OHPM-FILE-06` | error | 敏感文件：私钥/证书/签名配置/`.env`（含私钥头内容扫描） |
-| `OHPM-FILE-07` | warn | 包内含 `src/**` 源码（仅 har 模式） |
-| `OHPM-STRUCT-03` | error | `.so` 必须位于 `package/libs/` 下 |
+| `OHPM-FILE-06` | error / warn | 私钥/证书/签名配置/`.env`（含私钥头扫描）；`src/` 下为 warn，包根为 error |
+| `OHPM-FILE-07` | warn | 声明为混淆/字节码却仍带非 `.d.*` 源码（源码 HAR 不报） |
+| `OHPM-STRUCT-03` | error | `.so` 必须位于 `package/libs/`（`src/` 下的构建输入除外） |
+| `OHPM-PKG-01` | info | npm 风格包（无 `oh-package.json5`，有 `package.json`）：跳过 HAR 规范检查 |
 | `OHPM-NAME-01` | error | scope 语法：`@`/`/` 数量、字符集、≤36 字符 |
 | `OHPM-NAME-02` | error | name 总长 1–128 |
 | `OHPM-NAME-03` | error | 包名主体字符集、首尾分隔符 |

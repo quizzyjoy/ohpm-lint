@@ -1,6 +1,7 @@
 {
   "kind": "har",
   "expect": [
+    "OHPM-FILE-07",
     "OHPM-META-07",
     "OHPM-META-08",
     "OHPM-META-09",

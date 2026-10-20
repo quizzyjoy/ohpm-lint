@@ -5,6 +5,8 @@
   main: 'Index.ets',
   author: { name: 'QuizzyJoy', email: 'opensource@quizzyjoy.com' },
   license: 'Apache-2.0',
+  artifactType: 'bytecode',
+  types: 'Index.d.ets',
   repository: 'https://github.com/quizzyjoy/lintprobe',
   homepage: 'https://github.com/quizzyjoy/lintprobe',
   bugs: 'https://github.com/quizzyjoy/lintprobe/issues',

@@ -32,8 +32,11 @@ export function structRules(ctx: LintContext): Issue[] {
   }
 
   // ---- STRUCT-03 .so 必须位于 libs/ ----
+  // 源码 HAR 的 src/main/cpp 下会有构建用 .so（third-party/prebuilt），不算运行库错位。
   if (ctx.kind === 'har') {
-    const misplaced = ctx.files.filter((file) => /\.so$/i.test(file.path) && !/^libs\//i.test(file.path));
+    const misplaced = ctx.files.filter(
+      (file) => /\.so$/i.test(file.path) && !/^libs\//i.test(file.path) && !/^src\//i.test(file.path)
+    );
     if (misplaced.length > 0) {
       issues.push({
         rule: 'OHPM-STRUCT-03',

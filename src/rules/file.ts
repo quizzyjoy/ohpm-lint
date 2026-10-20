@@ -145,36 +145,49 @@ export function fileRules(ctx: LintContext): Issue[] {
   }
 
   // ---- FILE-06 敏感文件 ----
+  // 包根/资源目录下的证书密钥 = error；仅在 src/ 下的（第三方测试证书等）降为 warn。
   const sensitive = ctx.files.filter((file) => isSensitivePath(file.path) || containsPrivateKey(packageDir, file));
   if (sensitive.length > 0) {
+    const outsideSrc = sensitive.filter((file) => !/^src\//i.test(file.path));
     issues.push(
       issue(
         ctx,
         'OHPM-FILE-06',
-        'error',
+        outsideSrc.length > 0 ? 'error' : 'warn',
         '包内含敏感文件',
-        `发现 ${sensitive.length} 个：${listFew(sensitive.map((f) => f.path))}`,
+        `发现 ${sensitive.length} 个：${listFew(sensitive.map((f) => f.path))}${
+          outsideSrc.length === 0 ? '（均在 src/ 下，可能是第三方测试证书）' : ''
+        }`,
         '发布前删除私钥/证书/签名配置（官方要求检查私钥、密码、个人信息），并从 .gitignore 源头上排除。',
         '§8'
       )
     );
   }
 
-  // ---- FILE-07 源码泄漏（警告，仅 har：dir 模式下 src/ 是正常的开发源码）----
+  // ---- FILE-07 源码泄漏（警告；仅 har + 声明为混淆/字节码的包）----
+  // 源码 HAR（无 artifactType）本来就随源码分发，不算泄漏；
+  // 只有声明了 obfuscation/bytecode 却仍带非声明(.d.ts/.d.ets)源码时才提示。
   if (ctx.kind === 'har') {
-    const leaked = ctx.files.filter((file) => /^src\//i.test(file.path) && /\.(ets|ts)$/i.test(file.path));
-    if (leaked.length > 0) {
-      issues.push(
-        issue(
-          ctx,
-          'OHPM-FILE-07',
-          'warn',
-          '包内含 src 源码',
-          `发现 ${leaked.length} 个源文件：${listFew(leaked.map((f) => f.path))}`,
-          '用 release 构建（开启混淆/字节码）再打包，避免源码泄漏（ohpm prepublish 也会给出同样警告）。',
-          '建议项'
-        )
+    const artifactType = typeof ctx.manifest?.['artifactType'] === 'string' ? (ctx.manifest['artifactType'] as string) : 'original';
+    const claimsNoSource = artifactType === 'obfuscation' || artifactType === 'bytecode';
+
+    if (claimsNoSource) {
+      const leaked = ctx.files.filter(
+        (file) => /\.(ets|ts)$/i.test(file.path) && !/\.d\.(ets|ts)$/i.test(file.path)
       );
+      if (leaked.length > 0) {
+        issues.push(
+          issue(
+            ctx,
+            'OHPM-FILE-07',
+            'warn',
+            '声明为混淆/字节码，但包内仍有源码',
+            `发现 ${leaked.length} 个源文件：${listFew(leaked.map((f) => f.path))}`,
+            '用 release 构建（开启混淆/字节码）再打包；源码 HAR 请去掉 artifactType 声明。',
+            '建议项'
+          )
+        );
+      }
     }
   }
 
@@ -226,14 +239,22 @@ function containsVersionToken(text: string, version: string): boolean {
   return new RegExp(`(?<![\\d.])${escaped}(?![\\d.])`).test(text);
 }
 
-/** Extract package names from `ohpm install <name>` / `ohpm i <name>`. */
+/** Extract package names from `ohpm install <name>` / `ohpm i <name>` (version suffix stripped). */
 export function extractInstallTargets(text: string): string[] {
   const out: string[] = [];
   const re = /ohpm\s+(?:install|i)\s+([^\s"'`<>()[\],;]+)/gi;
   let match: RegExpExecArray | null;
   while ((match = re.exec(text)) !== null) {
     const raw = (match[1] ?? '').replace(/[.,;:]+$/, '');
-    if (raw !== '' && !raw.startsWith('-')) out.push(raw);
+    if (raw === '' || raw.startsWith('-')) continue;
+    out.push(stripVersion(raw));
   }
   return out;
+}
+
+/** `bugly@0.7.2` → `bugly`；`@scope/pkg@^1.0.0` → `@scope/pkg`；`@scope/pkg` 原样返回。 */
+export function stripVersion(target: string): string {
+  const match = /^(.*)@[^@/]+$/.exec(target);
+  const name = match?.[1];
+  return name !== undefined && name !== '' ? name : target;
 }
