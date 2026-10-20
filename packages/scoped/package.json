@@ -1,0 +1,44 @@
+{
+  "name": "@quizzyjoy/ohpm-lint",
+  "version": "0.1.0",
+  "description": "Org-scoped alias for ohpm-lint — lint your HarmonyOS HAR package against OHPM Center-repo rules before publishing.",
+  "type": "module",
+  "bin": {
+    "ohpm-lint": "bin/ohpm-lint.js"
+  },
+  "files": [
+    "bin"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "harmonyos",
+    "openharmony",
+    "ohpm",
+    "har",
+    "lint",
+    "cli"
+  ],
+  "author": {
+    "name": "河南趣知易解互联网科技有限公司",
+    "email": "opensource@quizzyjoy.com",
+    "url": "https://quizzyjoy.com"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/quizzyjoy/ohpm-lint.git",
+    "directory": "packages/scoped"
+  },
+  "homepage": "https://github.com/quizzyjoy/ohpm-lint#readme",
+  "bugs": {
+    "url": "https://github.com/quizzyjoy/ohpm-lint/issues"
+  },
+  "dependencies": {
+    "ohpm-lint": "^0.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

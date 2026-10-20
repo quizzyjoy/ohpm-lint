@@ -131,6 +131,16 @@ node dist/cli.js fixtures/pass-minimal/package --strict
 
 定级原则：官方写明「导致上架失败」的 → `error`；官方仅警告、或本就属质量建议的 → `warn`。工具不应当比审核更严。
 
+## 组织版别名
+
+npm 组织的命名空间是 `@quizzyjoy/*`，而无 scope 的 `ohpm-lint` 归发布者个人账号所有、不能转移给组织。因此额外提供了一个零逻辑别名：
+
+```bash
+npx @quizzyjoy/ohpm-lint ./path/to/library   # 与 npx ohpm-lint 完全等价
+```
+
+源码在 [`packages/scoped`](packages/scoped)，只有一行转发，版本跟随主包。
+
 ## 贡献
 
 Issue / PR 都欢迎。新增规则请同时提供：规则依据（官方链接 + 原文摘录）、正反 fixture、以及「误报会伤到谁」的说明。
