@@ -1,0 +1,12 @@
+{
+  name: '@quizzyjoy/lintprobe',
+  version: '0.1.0',
+  description: '短',
+  main: 'Missing.ets',
+  author: 'QuizzyJoy',
+  license: '',
+  homepage: 'https://github.com/quizzyjoy/lintprobe',
+  bugs: 'https://github.com/quizzyjoy/lintprobe/issues',
+  compatibleSdkVersion: '12',
+  compatibleSdkType: 'HarmonyOS'
+}

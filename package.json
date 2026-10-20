@@ -1,0 +1,54 @@
+{
+  "name": "ohpm-lint",
+  "version": "0.1.0",
+  "description": "Lint your HarmonyOS HAR package against OHPM Center-repo submission rules before you publish.",
+  "type": "module",
+  "bin": {
+    "ohpm-lint": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "SPEC.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test tests/lint.test.mjs",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "keywords": [
+    "harmonyos",
+    "openharmony",
+    "ohpm",
+    "har",
+    "lint",
+    "cli"
+  ],
+  "license": "Apache-2.0",
+  "dependencies": {
+    "json5": "^2.2.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  },
+  "author": {
+    "name": "河南趣知易解互联网科技有限公司",
+    "email": "opensource@quizzyjoy.com",
+    "url": "https://quizzyjoy.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/quizzyjoy/ohpm-lint.git"
+  },
+  "homepage": "https://github.com/quizzyjoy/ohpm-lint#readme",
+  "bugs": {
+    "url": "https://github.com/quizzyjoy/ohpm-lint/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

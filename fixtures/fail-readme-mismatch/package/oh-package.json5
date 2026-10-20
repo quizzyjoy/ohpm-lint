@@ -1,0 +1,13 @@
+{
+  name: '@quizzyjoy/lintprobe',
+  version: '0.1.0',
+  description: 'Fixture: README 安装命令写了别的包名。',
+  main: 'Index.ets',
+  author: { name: 'QuizzyJoy', email: 'opensource@quizzyjoy.com' },
+  license: 'Apache-2.0',
+  repository: 'https://github.com/quizzyjoy/lintprobe',
+  homepage: 'https://github.com/quizzyjoy/lintprobe',
+  bugs: 'https://github.com/quizzyjoy/lintprobe/issues',
+  compatibleSdkVersion: '12',
+  compatibleSdkType: 'HarmonyOS'
+}

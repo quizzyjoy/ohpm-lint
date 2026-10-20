@@ -1,0 +1,17 @@
+{
+  name: '@quizzyjoy/lintprobe',
+  version: '0.1.0',
+  description: 'A probe package used by the ohpm-lint test suite.',
+  main: 'Index.ets',
+  author: {
+    name: 'QuizzyJoy',
+    email: 'opensource@quizzyjoy.com'
+  },
+  license: 'Apache-2.0',
+  repository: 'https://github.com/quizzyjoy/lintprobe',
+  homepage: 'https://github.com/quizzyjoy/lintprobe',
+  bugs: 'https://github.com/quizzyjoy/lintprobe/issues',
+  dependencies: {},
+  compatibleSdkVersion: '12',
+  compatibleSdkType: 'HarmonyOS'
+}

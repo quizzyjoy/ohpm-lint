@@ -1,0 +1,16 @@
+{
+  name: '@quizzyjoy/lintprobe',
+  version: '0.1.0',
+  description: 'Fixture: 闭源包 artifactType / oh-exports / debug / 自依赖 / 缺 SDK 字段。',
+  main: 'Index.ets',
+  author: { name: 'QuizzyJoy', email: 'opensource@quizzyjoy.com' },
+  sourceType: 'closed',
+  artifactType: 'bytecode',
+  homepage: 'https://github.com/quizzyjoy/lintprobe',
+  bugs: 'https://github.com/quizzyjoy/lintprobe/issues',
+  dependencies: {
+    '@quizzyjoy/lintprobe': '1.0.0'
+  },
+  'oh-exports': ['/abs/Foo.ets', 'src/Missing.ets'],
+  metadata: { debug: true }
+}

@@ -2,7 +2,9 @@
 
 **Lint your OHPM package against the OpenHarmony Center-repo submission rules — before `ohpm publish`.**
 
-> 状态：**pre-alpha**。本仓库先占名并固化规格，规则引擎在写。
+> **非官方工具**：本项目与 OpenHarmony / 华为无隶属关系。规则依据官方公开文档（见 [SPEC.md](SPEC.md)），如有出入**以中心仓现网口径为准**。
+
+> 状态：**alpha**。P0 + P1 + P2 已实现（四件套 / 元数据 / 命名 / 版本 / 结构 / 安全 / 体积 / README 质量），11 组 fixtures、27 个测试全绿。
 > 一句话：把中心仓的审核口径，变成一条能在本地跑的检查命令。
 
 ## 为什么需要它
@@ -32,21 +34,92 @@
 
 推荐顺序：`ohpm prepublish` → `ohpm-lint` → `ohpm publish`。
 
-## 计划用法（尚未发布到 npm）
+## 用法
 
 ```bash
-npx ohpm-lint ./entry/build/default/outputs/default/entry-default.har
-npx ohpm-lint ./path/to/library --json --strict
+# 未发布到 npm 前，用本地构建产物
+node dist/cli.js ./path/to/library
+node dist/cli.js ./build/default/outputs/default/library.har --json --strict
+
+# 发布后
+npx ohpm-lint ./path/to/library
 ```
 
 | 参数 | 作用 |
 |---|---|
 | `--json` | 输出机器可读结果，供 CI 消费 |
 | `--strict` | 把 warn 视为 error |
-| `--config .ohpmlintrc.json5` | 规则开关与阈值 |
-| `--ignore R9,R12` | 临时豁免指定规则 |
+| `--ignore OHPM-FILE-04,OHPM-DOC-01` | 临时豁免指定规则（会在输出中回显） |
+| `--config .ohpmlintrc.json5` | 规则开关 / 级别覆盖 / 体积阈值（未指定时自动查找目标目录与当前目录） |
+| `--quiet` | 只输出汇总 |
+| `--no-color` | 关闭颜色（CI 自动） |
+
+配置示例：
+
+```json5
+// .ohpmlintrc.json5
+{
+  rules: {
+    'OHPM-DOC-01': 'off',                        // 关掉 README 八要素
+    'OHPM-SIZE-05': { warnMb: 5, strongMb: 15 }, // 收紧体积预算
+  },
+  severity: { 'OHPM-META-05': 'error' },         // 把建议项升级为阻断
+}
+```
 
 退出码：`0` 通过 / `1` 存在 error / `2` 工具自身失败。
+
+## 已实现的规则（v0.1 · P0 + P1）
+
+| 规则 | 级别 | 检查 |
+|---|---|---|
+| `OHPM-FILE-01` | error | 四件套齐全：`oh-package.json5`、`README`、`CHANGELOG`、`LICENSE`（闭源包免 LICENSE） |
+| `OHPM-FILE-02` | error | 四件套非空 |
+| `OHPM-FILE-03` | error | `CHANGELOG` 必须包含当前版本号 |
+| `OHPM-FILE-04` | error | `README` 必须含 `ohpm install <name>` 且与 `name` 一致 |
+| `OHPM-STRUCT-01` | error | HAR 必须包含 `package/` 目录（`oh-package.json5` 在其下） |
+| `OHPM-STRUCT-02` | error | `oh-package.json5` 必须能被 JSON5 解析 |
+| `OHPM-META-01` | error | `description` 6–512 字符 |
+| `OHPM-META-02` | error | `author` 必须是对象，`email`/`url` 至少一个 |
+| `OHPM-META-03` | error | 开源包 `license` 必填，1–256 字符 |
+| `OHPM-META-04` | error | 开源包 `repository` 必填，协议限 https/http/ftp/rtsp/mms |
+| `OHPM-META-05` | info/warn | `homepage` / `bugs` 建议项 |
+| `OHPM-META-06` | error | `main` 必须指向包内真实存在的文件 |
+
+| `OHPM-FILE-05` | error | 包内禁止 `.exe` |
+| `OHPM-FILE-06` | error | 敏感文件：私钥/证书/签名配置/`.env`（含私钥头内容扫描） |
+| `OHPM-FILE-07` | warn | 包内含 `src/**` 源码（仅 har 模式） |
+| `OHPM-STRUCT-03` | error | `.so` 必须位于 `package/libs/` 下 |
+| `OHPM-NAME-01` | error | scope 语法：`@`/`/` 数量、字符集、≤36 字符 |
+| `OHPM-NAME-02` | error | name 总长 1–128 |
+| `OHPM-NAME-03` | error | 包名主体字符集、首尾分隔符 |
+| `OHPM-NAME-04` | error | 禁止 `.har` / `.tar` / `.tgz` / `.tar.gz` 后缀 |
+| `OHPM-NAME-05` | error | group / 包名不得是 ArkTS 保留字 |
+| `OHPM-VER-01` | error | SemVer 格式、长度 5–128、禁止 `v` 前缀 |
+| `OHPM-VER-02` | error | 主/次/修订三段均 ≤ 2147483647 |
+| `OHPM-META-07` | error | `artifactType` / `types` / `obfuscated` / `addonSdk` 类型与取值 |
+| `OHPM-META-08` | error | 依赖字段：不得自依赖、包名 ≤214、版本 ≤128 |
+| `OHPM-META-09` | error | `oh-exports`：相对路径、后缀、文件存在性（含 `.d.ts` 回退） |
+| `OHPM-META-10` | error | `sourceType` 取值；闭源包禁止 `metadata.debug: true` |
+| `OHPM-META-11` | warn/info | `compatibleSdkVersion` / `compatibleSdkType`（dir 模式降为 info） |
+| `OHPM-META-12` | warn | `nativeComponents` 与 `package/libs/*.so` 一致性 |
+| `OHPM-SIZE-01` | error | HAR ≤ 500 MB（仅 `.har` 文件输入时校验） |
+| `OHPM-SIZE-02` | error | 解压后总大小 ≤ 1500 MB |
+| `OHPM-SIZE-03` | error | 文件数 ≤ 102400 |
+| `OHPM-SIZE-04` | error | README ≤ 10 MB |
+| `OHPM-SIZE-05` | warn | 质量预算（默认 10 MB 提示 / 30 MB 强提示，可配置），并列出体积 TOP5 |
+| `OHPM-DOC-01` | warn | README 八要素（安装/权限/接口/示例/约束/目录结构/贡献/许可），缺哪项报哪项 |
+
+v0.1 已覆盖官方 21 条中除第 19 条（组织归属/首发包人/下架冷却，平台侧）外的全部可本地校验项。完整清单见 [SPEC.md](SPEC.md) §3。
+
+## 开发
+
+```bash
+npm install
+npm test          # 构建 + fixtures 测试
+npm run build     # 只构建
+node dist/cli.js fixtures/pass-minimal/package --strict
+```
 
 ## 规则从哪来
 

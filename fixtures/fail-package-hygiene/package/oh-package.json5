@@ -1,0 +1,13 @@
+{
+  name: '@quizzyjoy/lintprobe',
+  version: '0.1.0',
+  description: 'Fixture: 包内混入 .exe / 私钥 / 源码 / 位置错误的 .so。',
+  main: 'Index.ets',
+  author: { name: 'QuizzyJoy', email: 'opensource@quizzyjoy.com' },
+  license: 'Apache-2.0',
+  repository: 'https://github.com/quizzyjoy/lintprobe',
+  homepage: 'https://github.com/quizzyjoy/lintprobe',
+  bugs: 'https://github.com/quizzyjoy/lintprobe/issues',
+  compatibleSdkVersion: '12',
+  compatibleSdkType: 'HarmonyOS'
+}

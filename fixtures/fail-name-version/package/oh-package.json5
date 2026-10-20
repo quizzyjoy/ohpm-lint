@@ -1,0 +1,13 @@
+{
+  name: '@QuizzyJoy/Lint.Probe.har',
+  version: 'v1.0.0',
+  description: 'Fixture: 非法包名与非法版本号。',
+  main: 'Index.ets',
+  author: { name: 'QuizzyJoy', email: 'opensource@quizzyjoy.com' },
+  license: 'Apache-2.0',
+  repository: 'https://github.com/quizzyjoy/lintprobe',
+  homepage: 'https://github.com/quizzyjoy/lintprobe',
+  bugs: 'https://github.com/quizzyjoy/lintprobe/issues',
+  compatibleSdkVersion: '12',
+  compatibleSdkType: 'HarmonyOS'
+}

@@ -1,0 +1,13 @@
+{
+  name: '@quizzyjoy/lintprobe',
+  version: '0.1.0',
+  description: 'Fixture: README 缺少权限/约束/目录结构三个要素。',
+  main: 'Index.ets',
+  author: { name: 'QuizzyJoy', email: 'opensource@quizzyjoy.com' },
+  license: 'Apache-2.0',
+  repository: 'https://github.com/quizzyjoy/lintprobe',
+  homepage: 'https://github.com/quizzyjoy/lintprobe',
+  bugs: 'https://github.com/quizzyjoy/lintprobe/issues',
+  compatibleSdkVersion: '12',
+  compatibleSdkType: 'HarmonyOS'
+}

@@ -1,0 +1,7 @@
+* text=auto eol=lf
+
+# binary-ish fixtures
+*.so binary
+*.exe binary
+*.har binary
+*.tgz binary

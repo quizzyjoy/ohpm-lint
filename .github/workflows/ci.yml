@@ -1,0 +1,36 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [18, 20, 22]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm test
+
+      # smoke: a compliant package must stay green, a broken one must exit 1
+      - name: self-check (compliant fixture)
+        run: node dist/cli.js fixtures/pass-minimal/package --strict
+
+      - name: self-check (broken fixture must fail)
+        run: |
+          if node dist/cli.js fixtures/fail-changelog-no-version/package --strict; then
+            echo "expected failure but got exit 0"
+            exit 1
+          fi
