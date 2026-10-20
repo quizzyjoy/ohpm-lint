@@ -1,5 +1,9 @@
 # ohpm-lint
 
+[![npm](https://img.shields.io/npm/v/@quizzyjoy/ohpm-lint)](https://www.npmjs.com/package/@quizzyjoy/ohpm-lint)
+[![ci](https://github.com/quizzyjoy/ohpm-lint/actions/workflows/ci.yml/badge.svg)](https://github.com/quizzyjoy/ohpm-lint/actions/workflows/ci.yml)
+[![license](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+
 **Lint your OHPM package against the OpenHarmony Center-repo submission rules — before `ohpm publish`.**
 
 > **非官方工具**：本项目与 OpenHarmony / 华为无隶属关系。规则依据官方公开文档（见 [SPEC.md](SPEC.md)），如有出入**以中心仓现网口径为准**。
@@ -22,7 +26,7 @@
 
 结论：**`prepublish` 通过 ≠ 能过审**。而审核被拒是真实且常见的（官方驳回记录里就有「`name` 与安装命令不一致」「CHANGELOG 没有记录当前版本」）。
 
-生态侧也不乐观：抽样 Top30 热门包，README 的八个必备要素齐全的只有 **7 个**；Top60 里 **12%** 没有 `repository`、**15%** 没有 CHANGELOG、**25%** 的 `license` 不是 SPDX 写法。
+生态侧也不乐观：抽样 **60 个热门包**（48 个规范 HAR），平均 **4.5 条告警/包**、**零告警 0 个**；README 里「目录结构」缺 **73%**、「约束与限制」缺 **65%**、「所需权限」缺 **54%**；**31%** 的 `license` 不是 SPDX 写法。完整数据见 [docs/scan-2026-10.md](docs/scan-2026-10.md)。
 
 ## 分工（不是替代品）
 
@@ -37,12 +41,12 @@
 ## 用法
 
 ```bash
-# 未发布到 npm 前，用本地构建产物
-node dist/cli.js ./path/to/library
-node dist/cli.js ./build/default/outputs/default/library.har --json --strict
+# 推荐：发布到 npm 后直接跑
+npx @quizzyjoy/ohpm-lint ./path/to/library
+npx @quizzyjoy/ohpm-lint ./build/default/outputs/default/library.har --json --strict
 
-# 发布后
-npx ohpm-lint ./path/to/library
+# 本地源码构建
+node dist/cli.js ./path/to/library
 ```
 
 | 参数 | 作用 |
@@ -69,7 +73,7 @@ npx ohpm-lint ./path/to/library
 
 退出码：`0` 通过 / `1` 存在 error / `2` 工具自身失败。
 
-## 已实现的规则（v0.1 · P0 + P1）
+## 已实现的规则（v0.2 · 36 条）
 
 | 规则 | 级别 | 检查 |
 |---|---|---|
@@ -85,7 +89,6 @@ npx ohpm-lint ./path/to/library
 | `OHPM-META-04` | error | 开源包 `repository` 必填，协议限 https/http/ftp/rtsp/mms |
 | `OHPM-META-05` | info/warn | `homepage` / `bugs` 建议项 |
 | `OHPM-META-06` | error / info | `main` 必须指向包内真实存在的文件；字节码 HAR 只写 `types` 时降为 info |
-
 | `OHPM-FILE-05` | error | 包内禁止 `.exe` |
 | `OHPM-FILE-06` | error / warn | 私钥/证书/签名配置/`.env`（含私钥头扫描）；`src/` 下为 warn，包根为 error |
 | `OHPM-FILE-07` | warn | 声明为混淆/字节码却仍带非 `.d.*` 源码（源码 HAR 不报） |
@@ -111,7 +114,24 @@ npx ohpm-lint ./path/to/library
 | `OHPM-SIZE-05` | warn | 质量预算（默认 10 MB 提示 / 30 MB 强提示，可配置），并列出体积 TOP5 |
 | `OHPM-DOC-01` | warn | README 八要素（安装/权限/接口/示例/约束/目录结构/贡献/许可），缺哪项报哪项 |
 
-v0.1 已覆盖官方 21 条中除第 19 条（组织归属/首发包人/下架冷却，平台侧）外的全部可本地校验项。完整清单见 [SPEC.md](SPEC.md) §3。
+v0.2 已覆盖官方 21 条中除第 19 条（组织归属/首发包人/下架冷却，平台侧）外的全部可本地校验项。完整清单见 [SPEC.md](SPEC.md) §3。
+
+## 在 GitHub Actions 里用
+
+仓库自带 composite action，可直接引用：
+
+```yaml
+- uses: quizzyjoy/ohpm-lint@v0.2.0
+  with:
+    path: harmony/library      # 目录或 .har
+    args: --strict --json
+```
+
+| input | 默认 | 说明 |
+|---|---|---|
+| `path` | `.` | 要检查的目录或 `.har` |
+| `args` | 空 | 追加参数（如 `--strict`、`--config .ohpmlintrc.json5`） |
+| `version` | `latest` | 指定 `@quizzyjoy/ohpm-lint` 版本 |
 
 ## 开发
 
@@ -141,15 +161,11 @@ node scripts/scan-ohpm.mjs --out scan.json @ohos/lottie @ohos/axios @ohos/mpchar
 
 定级原则：官方写明「导致上架失败」的 → `error`；官方仅警告、或本就属质量建议的 → `warn`。工具不应当比审核更严。
 
-## 组织版别名
+## 包名与发布
 
-npm 组织的命名空间是 `@quizzyjoy/*`，而无 scope 的 `ohpm-lint` 归发布者个人账号所有、不能转移给组织。因此额外提供了一个零逻辑别名：
+本项目只以**组织 scope** 发布：`@quizzyjoy/ohpm-lint`。
 
-```bash
-npx @quizzyjoy/ohpm-lint ./path/to/library   # 与 npx ohpm-lint 完全等价
-```
-
-源码在 [`packages/scoped`](packages/scoped)，只有一行转发，版本跟随主包。
+> 历史说明：`ohpm-lint@0.1.0`（无 scope）曾短暂发布，现已冻结在 0.1.0，不再更新；请使用带 scope 的包。
 
 ## 贡献
 

@@ -3,7 +3,15 @@
 All notable changes to this project are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: [SemVer](https://semver.org/).
 
-## [Unreleased]
+## [0.2.0] - 2026-10-21
+
+首个以组织 scope 发布的版本（`@quizzyjoy/ohpm-lint`）。
+
+### Changed
+
+- **包名改为 `@quizzyjoy/ohpm-lint`**，不再发布无 scope 的 `ohpm-lint`（0.1.0 冻结）。
+- 新增 composite GitHub Action（根目录 `action.yml`），可 `uses: quizzyjoy/ohpm-lint@v0.2.0`。
+- 新增公开扫描报告 `docs/scan-2026-10.md`（60 个热门包实测）。
 
 ### Fixed
 

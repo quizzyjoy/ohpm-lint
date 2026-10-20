@@ -1,0 +1,27 @@
+name: ohpm-lint
+description: Lint a HarmonyOS HAR package (or library module) against OHPM Center-repo submission rules
+author: quizzyjoy
+branding:
+  icon: check-circle
+  color: blue
+
+inputs:
+  path:
+    description: Path to a .har file or a library module directory
+    required: false
+    default: '.'
+  args:
+    description: Extra CLI arguments, e.g. "--strict --config .ohpmlintrc.json5"
+    required: false
+    default: ''
+  version:
+    description: Version of @quizzyjoy/ohpm-lint to run
+    required: false
+    default: 'latest'
+
+runs:
+  using: composite
+  steps:
+    - name: ohpm-lint
+      shell: bash
+      run: npx --yes @quizzyjoy/ohpm-lint@${{ inputs.version }} "${{ inputs.path }}" ${{ inputs.args }}
