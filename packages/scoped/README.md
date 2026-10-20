@@ -21,6 +21,9 @@ npx @quizzyjoy/ohpm-lint ./path/to/library
 
 两者行为完全一致：同一个 CLI、同一套规则、同样的退出码。
 
+> ⚠️ **别在本目录里验证**：在 `packages/scoped/` 内执行 `npx @quizzyjoy/ohpm-lint` 时，npm 会优先解析本地 `package.json`（同名包），而该目录没有安装依赖，会报 `'ohpm-lint' 不是内部或外部命令`。
+> 请在任意**其他目录**验证，或先在本目录 `npm install` 再跑 `node bin/ohpm-lint.js --version`。
+
 ## 规则依据
 
 - [三方库发布的必要文件](https://ohpm.openharmony.cn/#/cn/help/publishrequirefile)
